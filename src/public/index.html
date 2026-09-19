@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BOTdefender | Recherche & OSINT Discord ID</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%22100%22%20%22100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=gg+sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- En-tête -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-badge">🛡️</div>
+        <div>
+          <h1 class="logo-title">BOTdefender <span class="badge-tag">OSINT & LOOKUP</span></h1>
+          <p class="logo-subtitle">Analyse d'utilisateurs, extraction Snowflake, badges & évaluation de sécurité par ID Discord</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btnOpenTokenModal" class="btn btn-secondary">
+          <span class="icon">🔑</span>
+          <span>Config Token Bot</span>
+          <span id="tokenStatusDot" class="status-dot offline" title="Token non configuré"></span>
+        </button>
+        <a href="https://github.com/L1gh7OKZ/-BOTdefender" target="_blank" class="btn btn-icon" title="GitHub Repository">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- Barre de recherche -->
+    <section class="search-section">
+      <div class="search-card">
+        <form id="lookupForm" class="search-form">
+          <div class="input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              id="idInput"
+              class="search-input"
+              placeholder="Entrez un ID Discord (ex: 155149108183695360) ou une mention (<@123...>)"
+              autocomplete="off"
+              spellcheck="false"
+              required
+            />
+            <button type="button" id="btnClearInput" class="btn-clear hidden" title="Effacer">✕</button>
+          </div>
+          <button type="submit" id="btnSearch" class="btn btn-primary">
+            <span class="btn-text">Rechercher</span>
+            <span class="btn-spinner hidden"></span>
+          </button>
+        </form>
+
+        <!-- Boutons d'exemples rapides -->
+        <div class="samples-row">
+          <span class="samples-label">💡 Exemples :</span>
+          <div class="samples-chips">
+            <button type="button" class="chip sample-btn" data-id="155149108183695360">Compte 2016 (Vétéran)</button>
+            <button type="button" class="chip sample-btn" data-id="235148962103951360">Carl-bot (Bot Certifié)</button>
+            <button type="button" class="chip sample-btn" data-id="643945264868098049">Compte 2019</button>
+            <button type="button" class="chip sample-btn" data-id="1155095394011885609">Compte Récent</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Zone d'alerte / Erreur -->
+    <div id="errorAlert" class="alert alert-error hidden">
+      <span class="alert-icon">⚠️</span>
+      <span id="errorMessage" class="alert-text"></span>
+    </div>
+
+    <!-- Zone de chargement -->
+    <div id="loadingState" class="loading-container hidden">
+      <div class="spinner-large"></div>
+      <p>Recherche des données Discord en cours...</p>
+    </div>
+
+    <!-- Conteneur des résultats -->
+    <main id="resultContainer" class="result-container hidden">
+      <!-- Carte Discord Profil -->
+      <div class="profile-card">
+        <div class="banner-wrapper" id="profileBannerWrapper">
+          <div id="profileBanner" class="profile-banner"></div>
+        </div>
+
+        <div class="profile-header">
+          <div class="avatar-container">
+            <div class="avatar-wrapper">
+              <img id="profileAvatar" class="profile-avatar" src="" alt="Avatar Discord">
+              <img id="profileDecoration" class="profile-decoration hidden" src="" alt="Décoration">
+              <div id="statusIndicator" class="status-indicator offline"></div>
+            </div>
+          </div>
+
+          <div class="profile-meta">
+            <div class="name-row">
+              <h2 id="profileGlobalName" class="global-name">Pseudo</h2>
+              <span id="profileTag" class="user-tag">@username</span>
+              <span id="profileBotBadge" class="bot-badge hidden">BOT</span>
+              <span id="profileSystemBadge" class="system-badge hidden">SYSTÈME</span>
+            </div>
+            <div class="id-row">
+              <code id="profileId" class="id-code">000000000000000000</code>
+              <button id="btnCopyId" class="btn-mini" title="Copier l'ID">📋 Copier ID</button>
+            </div>
+          </div>
+
+          <div class="badges-row" id="profileBadgesHeader">
+            <!-- Badges insérés dynamiquement -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation par onglets -->
+      <nav class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-overview">📌 Vue d'ensemble</button>
+        <button class="tab-btn" data-tab="tab-badges">🏆 Badges & Rôles (<span id="badgesCount">0</span>)</button>
+        <button class="tab-btn" data-tab="tab-defender">🛡️ Sécurité BOTdefender</button>
+        <button class="tab-btn" data-tab="tab-snowflake">⚙️ Snowflake & Technique</button>
+        <button class="tab-btn" data-tab="tab-assets">🖼️ Ressources HD</button>
+        <button class="tab-btn" data-tab="tab-json">📄 Données Brutes (JSON)</button>
+      </nav>
+
+      <!-- Contenu des onglets -->
+      <div class="tab-content-wrapper">
+        <!-- Onglet 1 : Vue d'ensemble -->
+        <section id="tab-overview" class="tab-pane active">
+          <div class="grid-2col">
+            <!-- Carte Horodatage & Date de création -->
+            <div class="info-card">
+              <div class="card-header">
+                <span class="card-icon">📅</span>
+                <h3 class="card-title">Date de Création du Compte</h3>
+              </div>
+              <div class="card-body">
+                <div class="metric-highlight">
+                  <span class="metric-label">Date exacte (UTC)</span>
+                  <span id="ovCreatedAt" class="metric-value font-mono">--</span>
+                </div>
+                <div class="metric-highlight">
+                  <span class="metric-label">Âge du compte</span>
+                  <span id="ovAccountAge" class="metric-value badge-age">--</span>
+                </div>
+                <div class="tag-list">
+                  <div class="tag-item">
+                    <span class="tag-label">Format Relatif Discord :</span>
+                    <code id="tagRelative" class="tag-code">--</code>
+                    <button class="btn-copy-code" data-target="tagRelative" title="Copier">📋</button>
+                  </div>
+                  <div class="tag-item">
+                    <span class="tag-label">Format Date Complète :</span>
+                    <code id="tagFull" class="tag-code">--</code>
+                    <button class="btn-copy-code" data-target="tagFull" title="Copier">📋</button>
+                  </div>
+                  <div class="tag-item">
+                    <span class="tag-label">Timestamp Unix (sec) :</span>
+                    <code id="tagUnix" class="tag-code">--</code>
+                    <button class="btn-copy-code" data-target="tagUnix" title="Copier">📋</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Carte Statut & Lanyard -->
+            <div class="info-card">
+              <div class="card-header">
+                <span class="card-icon">📡</span>
+                <h3 class="card-title">Présence & Activité en Temps Réel</h3>
+              </div>
+              <div class="card-body">
+                <div id="lanyardActiveBox" class="lanyard-box">
+                  <div class="lanyard-status-row">
+                    <span class="metric-label">Statut en direct :</span>
+                    <span id="ovLiveStatus" class="status-pill offline">Hors ligne / Non connecté</span>
+                  </div>
+                  <div id="ovCustomStatusRow" class="custom-status-row hidden">
+                    <span class="metric-label">Statut personnalisé :</span>
+                    <div id="ovCustomStatus" class="custom-status-bubble"></div>
+                  </div>
+                  <div id="ovSpotifyBox" class="spotify-box hidden">
+                    <div class="spotify-header">
+                      <span class="spotify-icon">🎵</span>
+                      <span>Écoute sur Spotify</span>
+                    </div>
+                    <div class="spotify-content">
+                      <img id="spotifyArt" class="spotify-art" src="" alt="Album Art">
+                      <div class="spotify-details">
+                        <div id="spotifyTrack" class="spotify-track">Titre</div>
+                        <div id="spotifyArtist" class="spotify-artist">Artiste</div>
+                        <div id="spotifyAlbum" class="spotify-album">Album</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="devices-row">
+                    <span class="metric-label">Appareils actifs :</span>
+                    <div class="devices-chips">
+                      <span id="devDesktop" class="dev-chip inactive">💻 PC</span>
+                      <span id="devMobile" class="dev-chip inactive">📱 Mobile</span>
+                      <span id="devWeb" class="dev-chip inactive">🌐 Web</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Onglet 2 : Badges -->
+        <section id="tab-badges" class="tab-pane">
+          <div class="info-card">
+            <div class="card-header">
+              <span class="card-icon">🏆</span>
+              <h3 class="card-title">Badges & Drapeaux Publics Discord</h3>
+            </div>
+            <div class="card-body">
+              <div id="badgesGrid" class="badges-grid">
+                <!-- Badges insérés dynamiquement -->
+              </div>
+              <div id="noBadgesMessage" class="empty-state hidden">
+                <p>Aucun badge public Discord associé à ce compte.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Onglet 3 : Sécurité BOTdefender -->
+        <section id="tab-defender" class="tab-pane">
+          <div class="grid-2col">
+            <!-- Score de réputation -->
+            <div class="info-card">
+              <div class="card-header">
+                <span class="card-icon">🛡️</span>
+                <h3 class="card-title">Évaluation Anti-Raid & Réputation</h3>
+              </div>
+              <div class="card-body">
+                <div class="score-container">
+                  <div class="score-circle-wrapper">
+                    <div id="scoreValue" class="score-number">100</div>
+                    <div class="score-label">/ 100</div>
+                  </div>
+                  <div class="score-details">
+                    <div id="safetyLevelBadge" class="safety-badge">Compte Sûr</div>
+                    <p id="safetyLevelDesc" class="safety-desc">Compte établi sans signature de raid détectée.</p>
+                  </div>
+                </div>
+
+                <div class="progress-bar-container">
+                  <div id="safetyProgressBar" class="progress-bar-fill" style="width: 100%;"></div>
+                </div>
+
+                <div class="flags-section">
+                  <h4>🚩 Indicateurs & Signatures :</h4>
+                  <ul id="defenderFlagsList" class="flags-list"></ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conseils de modération -->
+            <div class="info-card">
+              <div class="card-header">
+                <span class="card-icon">⚙️</span>
+                <h3 class="card-title">Recommandations de Modération</h3>
+              </div>
+              <div class="card-body">
+                <ul id="defenderRecommendationsList" class="recommendations-list"></ul>
+
+                <div class="defender-tips-box">
+                  <h4>💡 Conseils pour protéger votre serveur :</h4>
+                  <ul>
+                    <li>Activez la vérification automatique des nouveaux comptes (AutoMod).</li>
+                    <li>Surveillez les comptes créés il y a moins de 24 heures en période d'affluence.</li>
+                    <li>Configurez un salon d'accueil avec Captcha pour les raids massifs.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Onglet 4 : Snowflake & Technique -->
+        <section id="tab-snowflake" class="tab-pane">
+          <div class="info-card">
+            <div class="card-header">
+              <span class="card-icon">⚙️</span>
+              <h3 class="card-title">Structure Interne du Discord Snowflake (64 bits)</h3>
+            </div>
+            <div class="card-body">
+              <div class="tech-grid">
+                <div class="tech-card">
+                  <div class="tech-title">Horodatage Interne</div>
+                  <div id="sfTimestamp" class="tech-val font-mono">--</div>
+                  <div class="tech-desc">Offset : Bits 22 à 63 (42 bits)</div>
+                </div>
+                <div class="tech-card">
+                  <div class="tech-title">Worker ID (Serveur interne)</div>
+                  <div id="sfWorkerId" class="tech-val font-mono">--</div>
+                  <div class="tech-desc">Offset : Bits 17 à 21 (5 bits)</div>
+                </div>
+                <div class="tech-card">
+                  <div class="tech-title">Process ID (Processus)</div>
+                  <div id="sfProcessId" class="tech-val font-mono">--</div>
+                  <div class="tech-desc">Offset : Bits 12 à 16 (5 bits)</div>
+                </div>
+                <div class="tech-card">
+                  <div class="tech-title">Numéro d'Incrément</div>
+                  <div id="sfIncrement" class="tech-val font-mono">--</div>
+                  <div class="tech-desc">Offset : Bits 0 à 11 (12 bits)</div>
+                </div>
+              </div>
+
+              <div class="binary-section">
+                <h4>Décomposition Binaire 64-bit :</h4>
+                <div class="binary-box">
+                  <span id="binTimestamp" class="bin-part part-timestamp" title="Horodatage (42 bits)"></span>
+                  <span id="binWorker" class="bin-part part-worker" title="Worker ID (5 bits)"></span>
+                  <span id="binProcess" class="bin-part part-process" title="Process ID (5 bits)"></span>
+                  <span id="binIncrement" class="bin-part part-increment" title="Incrément (12 bits)"></span>
+                </div>
+                <div class="binary-legend">
+                  <span class="leg-item"><span class="color-dot dot-timestamp"></span> Horodatage (42b)</span>
+                  <span class="leg-item"><span class="color-dot dot-worker"></span> Worker ID (5b)</span>
+                  <span class="leg-item"><span class="color-dot dot-process"></span> Process ID (5b)</span>
+                  <span class="leg-item"><span class="color-dot dot-increment"></span> Incrément (12b)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Onglet 5 : Ressources HD -->
+        <section id="tab-assets" class="tab-pane">
+          <div class="grid-2col">
+            <!-- Avatar -->
+            <div class="info-card">
+              <div class="card-header">
+                <span class="card-icon">🖼️</span>
+                <h3 class="card-title">Avatar Haute Définition</h3>
+              </div>
+              <div class="card-body">
+                <div class="asset-preview-box">
+                  <img id="assetAvatarImg" class="asset-preview-img" src="" alt="Avatar HD">
+                </div>
+                <div class="asset-links-row" id="avatarLinks"></div>
+              </div>
+            </div>
+
+            <!-- Bannière -->
+            <div class="info-card">
+              <div class="card-header">
+                <span class="card-icon">🎨</span>
+                <h3 class="card-title">Bannière & Couleur d'Accent</h3>
+              </div>
+              <div class="card-body">
+                <div id="bannerColorBox" class="color-preview-box">
+                  <span id="bannerColorHex" class="color-hex-text">#5865F2</span>
+                </div>
+                <div id="bannerLinks" class="asset-links-row"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Onglet 6 : JSON Brut -->
+        <section id="tab-json" class="tab-pane">
+          <div class="info-card">
+            <div class="card-header">
+              <span class="card-icon">📄</span>
+              <h3 class="card-title">Données Brutes Formatées (JSON API)</h3>
+              <div class="card-header-actions">
+                <button id="btnCopyJson" class="btn btn-secondary btn-sm">📋 Copier JSON</button>
+                <button id="btnDownloadJson" class="btn btn-secondary btn-sm">💾 Télécharger</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <pre id="jsonViewer" class="json-viewer"><code>{}</code></pre>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Modal de configuration du token Bot -->
+    <div id="tokenModal" class="modal-overlay hidden">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3>🔑 Configuration du Token de Bot Discord</h3>
+          <button id="btnCloseTokenModal" class="btn-close">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">
+            Pour obtenir les données en direct depuis l'API officielle Discord (Badges exacts, Avatar HD, Bannière personnalisée, Nitro), entrez un token de bot Discord.
+          </p>
+          <div class="form-group">
+            <label for="tokenInput">Token Bot Discord :</label>
+            <input type="password" id="tokenInput" class="form-input" placeholder="MTAx... (Votre token Discord Bot)">
+            <small class="form-help">Le token est stocké localement dans votre navigateur (localStorage) et n'est jamais divulgué.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btnRemoveToken" class="btn btn-danger">Supprimer le Token</button>
+          <button id="btnSaveToken" class="btn btn-primary">Enregistrer le Token</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
