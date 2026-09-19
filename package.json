@@ -1,0 +1,34 @@
+{
+  "name": "botdefender-lookup",
+  "version": "1.0.0",
+  "description": "Outil avancé de recherche d'informations et OSINT Discord par ID (Bot, Web UI, API REST, CLI)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "web": "node src/server/index.js",
+    "bot": "node src/bot/bot.js",
+    "cli": "node cli/lookup.js",
+    "cli:py": "python3 cli/lookup.py",
+    "test": "node tests/test.js"
+  },
+  "keywords": [
+    "discord",
+    "discord-lookup",
+    "osint",
+    "discord-id",
+    "snowflake",
+    "botdefender",
+    "security",
+    "anti-raid"
+  ],
+  "author": "L1gh7OKZ",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "cors": "^2.8.5",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "helmet": "^7.1.0"
+  }
+}
